@@ -11,7 +11,7 @@ export default defineConfig({
         icon: 'https://raw.githubusercontent.com/BidBadEgg/javm/main/src-tauri/icons/32x32.png',
         namespace: 'bidbadegg/javm-m3u8-helper',
         name: 'JAVM M3U8 Helper',
-        version: '1.1.1',
+        version: '1.1.2',
         description: '检测页面中的 m3u8 链接，一键唤起 JAVM 下载或调用播放器',
         author: 'BidBadEgg',
         license: 'MIT',

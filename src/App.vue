@@ -168,7 +168,13 @@ function downloadJavm(item: M3u8Item, index: number) {
   }
   const deeplink = `javm://download?url=${encodeURIComponent(item.url)}&title=${encodeURIComponent(title)}`
   downloadedUrls.add(item.url)
-  GM_openInTab(deeplink, { active: false })
+  // 顶层窗口直接跳转，iframe 内用 GM_openInTab 绕过沙箱限制
+  const isTop = (() => { try { return window.self === window.top } catch { return false } })()
+  if (isTop) {
+    location.href = deeplink
+  } else {
+    GM_openInTab(deeplink, { active: false })
+  }
   toast('已发送到 JAVM')
 }
 
