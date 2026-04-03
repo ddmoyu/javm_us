@@ -71,3 +71,37 @@ export function loadPlayers(): PlayerConfig[] {
 export function savePlayers(players: PlayerConfig[]): void {
   storageSet(STORAGE_KEY, JSON.stringify(players))
 }
+
+/* ============================================================
+   气泡位置记忆
+   ============================================================ */
+export interface BubblePosition {
+  bottom: number
+  right: number
+}
+
+const POS_KEY = 'javm-bubble-pos'
+const REMEMBER_KEY = 'javm-remember-pos'
+
+export function loadRememberPosition(): boolean {
+  const v = storageGet(REMEMBER_KEY)
+  return v === 'true'
+}
+
+export function saveRememberPosition(val: boolean): void {
+  storageSet(REMEMBER_KEY, val ? 'true' : 'false')
+}
+
+export function loadBubblePosition(): BubblePosition | null {
+  try {
+    const raw = storageGet(POS_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+export function saveBubblePosition(pos: BubblePosition): void {
+  storageSet(POS_KEY, JSON.stringify(pos))
+}

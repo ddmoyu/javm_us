@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import type { M3u8Item } from './collector'
-import { loadPlayers, savePlayers, formatPlayerUrl, type PlayerConfig } from './players'
+import { loadPlayers, savePlayers, formatPlayerUrl, type PlayerConfig, loadBubblePosition, saveBubblePosition, loadRememberPosition, saveRememberPosition } from './players'
 
 const collector = inject<ReturnType<typeof import('./collector').createCollector>>('collector')!
 
@@ -23,6 +23,75 @@ const enabledPlayers = computed(() => players.value.filter((p) => p.enabled))
 
 // 新增播放器表单
 const newPlayer = ref({ name: '', icon: '🔗', template: '' })
+
+// 气泡位置拖拽
+const rememberPos = ref(loadRememberPosition())
+const bubblePos = ref(loadBubblePosition() ?? { bottom: 24, right: 24 })
+const isDragging = ref(false)
+let dragStartX = 0
+let dragStartY = 0
+let dragStartRight = 0
+let dragStartBottom = 0
+let hasMoved = false
+
+function onBubblePointerDown(e: PointerEvent) {
+  bubblePressed.value = true
+  isDragging.value = false
+  hasMoved = false
+  dragStartX = e.clientX
+  dragStartY = e.clientY
+  dragStartRight = bubblePos.value.right
+  dragStartBottom = bubblePos.value.bottom
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  document.addEventListener('pointermove', onPointerMove)
+  document.addEventListener('pointerup', onPointerUp)
+}
+
+function onPointerMove(e: PointerEvent) {
+  const dx = e.clientX - dragStartX
+  const dy = e.clientY - dragStartY
+  if (!hasMoved && Math.abs(dx) < 4 && Math.abs(dy) < 4) return
+  hasMoved = true
+  isDragging.value = true
+  const maxRight = window.innerWidth - 56
+  const maxBottom = window.innerHeight - 56
+  bubblePos.value = {
+    right: Math.max(0, Math.min(maxRight, dragStartRight - dx)),
+    bottom: Math.max(0, Math.min(maxBottom, dragStartBottom + dy)),
+  }
+}
+
+function onPointerUp() {
+  bubblePressed.value = false
+  document.removeEventListener('pointermove', onPointerMove)
+  document.removeEventListener('pointerup', onPointerUp)
+  if (isDragging.value && rememberPos.value) {
+    saveBubblePosition(bubblePos.value)
+  }
+  // 延迟重置，避免 click 事件触发
+  setTimeout(() => { isDragging.value = false }, 0)
+}
+
+function onBubbleClick() {
+  if (hasMoved) return
+  togglePanel()
+}
+
+function toggleRememberPos() {
+  rememberPos.value = !rememberPos.value
+  saveRememberPosition(rememberPos.value)
+  if (rememberPos.value) {
+    saveBubblePosition(bubblePos.value)
+  }
+}
+
+function resetPosition() {
+  bubblePos.value = { bottom: 24, right: 24 }
+  if (rememberPos.value) {
+    saveBubblePosition(bubblePos.value)
+  }
+  toast('已重置位置')
+}
 
 onMounted(() => {
   items.value = collector.getItems()
@@ -102,18 +171,16 @@ function addPlayer() {
 </script>
 
 <template>
-  <div class="javm-root">
+  <div class="javm-root" :style="{ bottom: bubblePos.bottom + 'px', right: bubblePos.right + 'px' }">
     <!-- 悬浮气泡 -->
     <Transition name="bubble">
       <div v-if="items.length > 0" class="javm-bubble-wrap">
         <div class="javm-bubble-ring"></div>
         <button
           class="javm-bubble"
-          :class="{ active: showPanel, pressed: bubblePressed }"
-          @click="togglePanel"
-          @mousedown="bubblePressed = true"
-          @mouseup="bubblePressed = false"
-          @mouseleave="bubblePressed = false"
+          :class="{ active: showPanel, pressed: bubblePressed, dragging: isDragging }"
+          @click="onBubbleClick"
+          @pointerdown.prevent="onBubblePointerDown"
           :title="`发现 ${items.length} 个 m3u8 流`"
         >
           <svg class="javm-bubble-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -206,6 +273,19 @@ function addPlayer() {
                   <span v-else class="javm-setting-tag">内置</span>
                 </div>
               </TransitionGroup>
+            </div>
+
+            <div class="javm-settings-section">
+              <div class="javm-settings-label">气泡位置</div>
+              <div class="javm-setting-row">
+                <label class="javm-switch">
+                  <input type="checkbox" :checked="rememberPos" @change="toggleRememberPos" />
+                  <span class="javm-slider"></span>
+                </label>
+                <span class="javm-setting-name" style="flex:1">记住位置</span>
+                <button class="javm-reset-btn" @click="resetPosition" title="重置到右下角">重置</button>
+              </div>
+              <div class="javm-hint">拖拽气泡按钮可自由移动位置</div>
             </div>
 
             <div class="javm-settings-section">
@@ -356,6 +436,15 @@ function addPlayer() {
 .javm-bubble.active {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
   border-radius: 14px !important;
+}
+.javm-bubble.dragging {
+  cursor: grabbing !important;
+  transform: scale(1.12) !important;
+  box-shadow:
+    0 10px 30px rgba(99, 102, 241, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  transition: none !important;
 }
 
 .javm-bubble-icon {
@@ -669,6 +758,22 @@ function addPlayer() {
   padding: 2px 8px !important;
   border-radius: 6px !important;
   font-weight: 500 !important;
+}
+
+.javm-reset-btn {
+  all: unset;
+  cursor: pointer !important;
+  font-size: 11px !important;
+  color: #a5b4fc !important;
+  background: rgba(99, 102, 241, 0.12) !important;
+  padding: 3px 10px !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+.javm-reset-btn:hover {
+  background: rgba(99, 102, 241, 0.25) !important;
+  color: #c7d2fe !important;
 }
 
 /* Toggle 开关 */
