@@ -161,7 +161,12 @@ function downloadJavm(item: M3u8Item, index: number) {
   }
   const deeplink = `javm://download?url=${encodeURIComponent(item.url)}&title=${encodeURIComponent(title)}`
   downloadedUrls.add(item.url)
-  location.href = deeplink
+  // 用隐藏 iframe 触发自定义协议，避免在嵌套 iframe 中 location.href 失效
+  const launcher = document.createElement('iframe')
+  launcher.style.display = 'none'
+  launcher.src = deeplink
+  document.body.appendChild(launcher)
+  setTimeout(() => launcher.remove(), 3000)
   toast('已发送到 JAVM')
 }
 
