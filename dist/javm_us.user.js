@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JAVM M3U8 Helper
 // @namespace    bidbadegg/javm-m3u8-helper
-// @version      1.0.0
+// @version      1.0.1
 // @author       BidBadEgg
 // @description  检测页面中的 m3u8 链接，一键唤起 JAVM 下载或调用播放器
 // @license      MIT
