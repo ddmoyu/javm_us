@@ -120,12 +120,19 @@ function copyUrl(url: string) {
   toast('已复制链接')
 }
 
+const downloadedUrls = new Set<string>()
+
 function downloadJavm(item: M3u8Item, index: number) {
+  if (downloadedUrls.has(item.url)) {
+    toast('该任务已发送，请勿重复下载')
+    return
+  }
   let title = document.title || item.filename
   if (items.value.length > 1) {
     title += `_${index + 1}`
   }
   const deeplink = `javm://download?url=${encodeURIComponent(item.url)}&title=${encodeURIComponent(title)}`
+  downloadedUrls.add(item.url)
   location.href = deeplink
   toast('已发送到 JAVM')
 }
