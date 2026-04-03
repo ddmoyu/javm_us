@@ -142,11 +142,18 @@ function copyUrl(url: string) {
 const downloadedUrls = new Set<string>()
 
 function getPageTitle(): string {
+  // 1. 同源情况下直接读取顶层标题
   try {
     if (window.top && window.top.document) {
       return window.top.document.title
     }
   } catch {}
+  // 2. 跨域 iframe：通过 GM_getValue 读取顶层窗口存储的标题
+  try {
+    const topTitle = GM_getValue('javm_top_title', '')
+    if (topTitle) return topTitle
+  } catch {}
+  // 3. 最终回退
   return document.title
 }
 
