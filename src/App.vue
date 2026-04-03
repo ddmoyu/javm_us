@@ -52,8 +52,11 @@ function copyUrl(url: string) {
   toast('已复制链接')
 }
 
-function downloadJavm(item: M3u8Item) {
-  const title = document.title || item.filename
+function downloadJavm(item: M3u8Item, index: number) {
+  let title = document.title || item.filename
+  if (items.value.length > 1) {
+    title += `_${index + 1}`
+  }
   const deeplink = `javm://download?url=${encodeURIComponent(item.url)}&title=${encodeURIComponent(title)}`
   location.href = deeplink
   toast('已发送到 JAVM')
@@ -169,7 +172,7 @@ function addPlayer() {
                   <button class="javm-act-btn javm-act-copy" @click="copyUrl(item.url)" title="复制链接">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   </button>
-                  <button class="javm-act-btn javm-act-dl" @click="downloadJavm(item)" title="JAVM 下载">
+                  <button class="javm-act-btn javm-act-dl" @click="downloadJavm(item, i)" title="JAVM 下载">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   </button>
                   <button
