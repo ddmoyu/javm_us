@@ -5,6 +5,9 @@ import { loadPlayers, savePlayers, formatPlayerUrl, type PlayerConfig } from './
 
 const collector = inject<ReturnType<typeof import('./collector').createCollector>>('collector')!
 
+// 从 userscript 元数据读取版本号
+const version = typeof GM_info !== 'undefined' ? GM_info.script.version : '1.0.1'
+
 const items = ref<M3u8Item[]>([])
 const showPanel = ref(false)
 const showSettings = ref(false)
@@ -227,7 +230,7 @@ function addPlayer() {
               </svg>
             </div>
             <div class="javm-about-name">JAVM M3U8 Helper</div>
-            <div class="javm-about-ver">v1.0.0</div>
+            <div class="javm-about-ver">v{{ version }}</div>
             <div class="javm-about-desc">自动检测页面中的 m3u8 视频流，一键下载或播放。</div>
             <div class="javm-about-links">
               <a class="javm-about-link" href="https://github.com/ddmoyu/javm" target="_blank" rel="noopener noreferrer">

@@ -113,7 +113,7 @@ export function createCollector() {
   const listeners = new Set<() => void>()
 
   function notify() {
-    listeners.forEach((fn) => fn())
+    for (const fn of listeners) fn()
   }
 
   function add(url: string) {
@@ -125,6 +125,7 @@ export function createCollector() {
       if (found.has(full)) return
       found.add(full)
     } catch {
+      if (found.has(clean)) return
       found.add(clean)
     }
     notify()
@@ -142,15 +143,21 @@ export function createCollector() {
   // 网络请求 hook（尽早注入）
   hookNetwork(add)
 
-  // 定时扫描 video 元素（兼容动态加载的播放器）
-  setInterval(() => {
-    scanVideoElements().forEach(add)
-  }, 1500)
+  // 防抖扫描，合并高频 DOM 变动
+  let scanTimer = 0
+  function debouncedScan() {
+    if (scanTimer) return
+    scanTimer = window.setTimeout(() => {
+      scanTimer = 0
+      scanVideoElements().forEach(add)
+    }, 300)
+  }
 
-  // MutationObserver 作为补充
-  const observer = new MutationObserver(() => {
-    scanVideoElements().forEach(add)
-  })
+  // 定时扫描 video 元素（兼容动态加载的播放器）
+  setInterval(debouncedScan, 3000)
+
+  // MutationObserver 实时监听 DOM 变化
+  const observer = new MutationObserver(debouncedScan)
   if (document.documentElement) {
     observer.observe(document.documentElement, { childList: true, subtree: true })
   } else {
