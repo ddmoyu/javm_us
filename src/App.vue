@@ -27,6 +27,7 @@ const newPlayer = ref({ name: '', icon: '🔗', template: '' })
 // 气泡位置拖拽
 const rememberPos = ref(loadRememberPosition())
 const bubblePos = ref(loadBubblePosition() ?? { bottom: 24, right: 24 })
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
 const isDragging = ref(false)
 let dragStartX = 0
 let dragStartY = 0
@@ -76,6 +77,18 @@ function onBubbleClick() {
   togglePanel()
 }
 
+// 面板位置计算：防止拖到左侧时面板被裁切
+const panelStyle = computed(() => {
+  const panelWidth = 500
+  const margin = 8
+  const panelLeftEdge = windowWidth.value - bubblePos.value.right - panelWidth
+  if (panelLeftEdge < margin) {
+    const offset = margin - panelLeftEdge
+    return { transform: `translateX(${offset}px)` }
+  }
+  return {}
+})
+
 function toggleRememberPos() {
   rememberPos.value = !rememberPos.value
   saveRememberPosition(rememberPos.value)
@@ -92,15 +105,21 @@ function resetPosition() {
   toast('已重置位置')
 }
 
+function onWindowResize() {
+  windowWidth.value = window.innerWidth
+}
+
 onMounted(() => {
   items.value = collector.getItems()
   offChange = collector.onChange(() => {
     items.value = collector.getItems()
   })
+  window.addEventListener('resize', onWindowResize)
 })
 
 onUnmounted(() => {
   offChange?.()
+  window.removeEventListener('resize', onWindowResize)
 })
 
 function togglePanel() {
@@ -200,7 +219,7 @@ function addPlayer() {
 
     <!-- 面板 -->
     <Transition name="panel">
-      <div v-if="showPanel && items.length > 0" class="javm-panel">
+      <div v-if="showPanel && items.length > 0" class="javm-panel" :style="panelStyle">
         <div class="javm-panel-glow"></div>
 
         <!-- 标题栏 -->
