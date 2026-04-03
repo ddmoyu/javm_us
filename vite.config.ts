@@ -14,6 +14,7 @@ export default defineConfig({
         version: '1.0.0',
         description: '检测页面中的 m3u8 链接，一键唤起 JAVM 下载或调用播放器',
         author: 'BidBadEgg',
+        license: 'MIT',
         match: ['*://*/*'],
         grant: ['GM_setClipboard', 'GM_setValue', 'GM_getValue', 'unsafeWindow'],
         'run-at': 'document-start',

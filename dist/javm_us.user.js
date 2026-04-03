@@ -4,6 +4,7 @@
 // @version      1.0.0
 // @author       BidBadEgg
 // @description  检测页面中的 m3u8 链接，一键唤起 JAVM 下载或调用播放器
+// @license      MIT
 // @icon         https://raw.githubusercontent.com/BidBadEgg/javm/main/src-tauri/icons/32x32.png
 // @match        *://*/*
 // @require      https://cdn.jsdelivr.net/npm/vue@3.5.32/dist/vue.global.prod.js
