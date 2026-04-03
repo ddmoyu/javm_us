@@ -141,12 +141,21 @@ function copyUrl(url: string) {
 
 const downloadedUrls = new Set<string>()
 
+function getPageTitle(): string {
+  try {
+    if (window.top && window.top.document) {
+      return window.top.document.title
+    }
+  } catch {}
+  return document.title
+}
+
 function downloadJavm(item: M3u8Item, index: number) {
   if (downloadedUrls.has(item.url)) {
     toast('该任务已发送，请勿重复下载')
     return
   }
-  let title = document.title || item.filename
+  let title = getPageTitle() || item.filename
   if (items.value.length > 1) {
     title += `_${index + 1}`
   }
