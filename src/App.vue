@@ -42,9 +42,8 @@ function onBubblePointerDown(e: PointerEvent) {
   dragStartY = e.clientY
   dragStartRight = bubblePos.value.right
   dragStartBottom = bubblePos.value.bottom
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-  document.addEventListener('pointermove', onPointerMove)
-  document.addEventListener('pointerup', onPointerUp)
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', onPointerUp)
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -57,14 +56,14 @@ function onPointerMove(e: PointerEvent) {
   const maxBottom = window.innerHeight - 56
   bubblePos.value = {
     right: Math.max(0, Math.min(maxRight, dragStartRight - dx)),
-    bottom: Math.max(0, Math.min(maxBottom, dragStartBottom + dy)),
+    bottom: Math.max(0, Math.min(maxBottom, dragStartBottom - dy)),
   }
 }
 
 function onPointerUp() {
   bubblePressed.value = false
-  document.removeEventListener('pointermove', onPointerMove)
-  document.removeEventListener('pointerup', onPointerUp)
+  window.removeEventListener('pointermove', onPointerMove)
+  window.removeEventListener('pointerup', onPointerUp)
   if (isDragging.value && rememberPos.value) {
     saveBubblePosition(bubblePos.value)
   }
@@ -180,7 +179,7 @@ function addPlayer() {
           class="javm-bubble"
           :class="{ active: showPanel, pressed: bubblePressed, dragging: isDragging }"
           @click="onBubbleClick"
-          @pointerdown.prevent="onBubblePointerDown"
+          @pointerdown="onBubblePointerDown"
           :title="`发现 ${items.length} 个 m3u8 流`"
         >
           <svg class="javm-bubble-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -355,8 +354,6 @@ function addPlayer() {
 .javm-root {
   all: initial;
   position: fixed !important;
-  bottom: 24px !important;
-  right: 24px !important;
   z-index: 2147483647 !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
   font-size: 13px !important;
