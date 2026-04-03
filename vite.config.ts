@@ -19,6 +19,7 @@ export default defineConfig({
         'run-at': 'document-start',
       },
       build: {
+        fileName: 'javm_us.user.js',
         externalGlobals: {
           vue: cdn.jsdelivr('Vue', 'dist/vue.global.prod.js'),
         },

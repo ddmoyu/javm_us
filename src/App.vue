@@ -8,6 +8,7 @@ const collector = inject<ReturnType<typeof import('./collector').createCollector
 const items = ref<M3u8Item[]>([])
 const showPanel = ref(false)
 const showSettings = ref(false)
+const showAbout = ref(false)
 const toastMsg = ref('')
 const bubblePressed = ref(false)
 let toastTimer = 0
@@ -34,6 +35,7 @@ onUnmounted(() => {
 function togglePanel() {
   showPanel.value = !showPanel.value
   showSettings.value = false
+  showAbout.value = false
 }
 
 function toast(msg: string) {
@@ -126,15 +128,21 @@ function addPlayer() {
         <div class="javm-panel-header">
           <div class="javm-panel-title-area">
             <Transition name="title-swap" mode="out-in">
-              <span v-if="!showSettings" key="list" class="javm-panel-title">M3U8 流</span>
-              <span v-else key="settings" class="javm-panel-title">播放器设置</span>
+              <span v-if="!showSettings && !showAbout" key="list" class="javm-panel-title">M3U8 流</span>
+              <span v-else-if="showSettings" key="settings" class="javm-panel-title">播放器设置</span>
+              <span v-else key="about" class="javm-panel-title">关于</span>
             </Transition>
-            <span v-if="!showSettings" class="javm-panel-count">{{ items.length }}</span>
+            <span v-if="!showSettings && !showAbout" class="javm-panel-count">{{ items.length }}</span>
           </div>
           <div class="javm-header-actions">
-            <button class="javm-icon-btn" :class="{ 'is-active': showSettings }" @click="showSettings = !showSettings" title="设置">
+            <button class="javm-icon-btn" :class="{ 'is-active': showSettings }" @click="showSettings = !showSettings; showAbout = false" title="设置">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </button>
+            <button class="javm-icon-btn" :class="{ 'is-active': showAbout }" @click="showAbout = !showAbout; showSettings = false" title="关于">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
               </svg>
             </button>
             <button class="javm-icon-btn javm-close-btn" @click="showPanel = false" title="关闭">
@@ -147,7 +155,7 @@ function addPlayer() {
 
         <!-- 流列表 -->
         <Transition name="view-swap" mode="out-in">
-          <div v-if="!showSettings" key="list" class="javm-panel-body">
+          <div v-if="!showSettings && !showAbout" key="list" class="javm-panel-body">
             <TransitionGroup name="list-item" tag="div">
               <div v-for="(item, i) in items" :key="item.url" class="javm-item" :style="{ '--i': i }">
                 <div class="javm-item-info">
@@ -174,7 +182,7 @@ function addPlayer() {
           </div>
 
           <!-- 设置面板 -->
-          <div v-else key="settings" class="javm-panel-body javm-settings">
+          <div v-else-if="showSettings" key="settings" class="javm-panel-body javm-settings">
             <div class="javm-settings-section">
               <div class="javm-settings-label">播放器列表</div>
               <TransitionGroup name="list-item" tag="div">
@@ -207,6 +215,37 @@ function addPlayer() {
               <div class="javm-hint">
                 模板变量: <code>{url}</code> 原始链接 · <code>{encoded_url}</code> 编码后链接
               </div>
+            </div>
+          </div>
+
+          <!-- 关于面板 -->
+          <div v-else key="about" class="javm-panel-body javm-about">
+            <div class="javm-about-logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+            </div>
+            <div class="javm-about-name">JAVM M3U8 Helper</div>
+            <div class="javm-about-ver">v1.0.0</div>
+            <div class="javm-about-desc">自动检测页面中的 m3u8 视频流，一键下载或播放。</div>
+            <div class="javm-about-links">
+              <a class="javm-about-link" href="https://github.com/ddmoyu/javm" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                <div class="javm-about-link-text">
+                  <span class="javm-about-link-title">JAVM</span>
+                  <span class="javm-about-link-sub">Jav 视频管理工具，包含：刮削，下载，播放</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;opacity:0.4"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+              </a>
+              <a class="javm-about-link" href="https://github.com/ddmoyu/javm_us" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                <div class="javm-about-link-text">
+                  <span class="javm-about-link-title">JAVM UserScript</span>
+                  <span class="javm-about-link-sub">M3U8 检测油猴脚本，配合 JAVM 使用</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;opacity:0.4"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+              </a>
             </div>
           </div>
         </Transition>
@@ -728,6 +767,98 @@ function addPlayer() {
   border-radius: 4px !important;
   font-size: 10px !important;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace !important;
+}
+
+/* ============================================================
+   关于面板
+   ============================================================ */
+.javm-about {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 28px 24px 24px !important;
+  gap: 6px !important;
+}
+.javm-about-logo {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 4px !important;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
+}
+.javm-about-logo svg {
+  width: 24px !important;
+  height: 24px !important;
+  color: #fff !important;
+}
+.javm-about-name {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #f1f5f9 !important;
+  letter-spacing: -0.02em !important;
+}
+.javm-about-ver {
+  font-size: 11px !important;
+  color: #64748b !important;
+  background: rgba(99, 102, 241, 0.1) !important;
+  padding: 2px 10px !important;
+  border-radius: 10px !important;
+  font-weight: 500 !important;
+}
+.javm-about-desc {
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+  text-align: center !important;
+  margin: 4px 0 12px !important;
+  line-height: 1.5 !important;
+}
+.javm-about-links {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+.javm-about-link {
+  all: unset;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  cursor: pointer !important;
+  color: #94a3b8 !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+}
+.javm-about-link:hover {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.2) !important;
+  transform: translateY(-1px) !important;
+}
+.javm-about-link-text {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+.javm-about-link-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #e2e8f0 !important;
+}
+.javm-about-link-sub {
+  font-size: 11px !important;
+  color: #64748b !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 /* ============================================================
